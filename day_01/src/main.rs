@@ -15,9 +15,8 @@ fn main() {
     let (_, instructions) = read_input(&dial_string).unwrap();
 
     let mut dial = Dial::new();
-    let result = instructions.into_iter().fold(0, |acc, (dir, magnitude)| {
-        dial.rotate(dir, magnitude);
-        acc + dial.is_pointing_zero() as u32
-    });
+    let result = instructions
+        .into_iter()
+        .fold(0, |acc, (dir, magnitude)| acc + dial.rotate(dir, magnitude));
     println!("Result: {}", result);
 }

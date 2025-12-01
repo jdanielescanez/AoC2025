@@ -1,4 +1,4 @@
-const POINTER_LIMIT: u32 = 100;
+pub const POINTER_LIMIT: u32 = 100;
 const INITIAL_POINTER: u32 = 50;
 
 #[derive(PartialEq, Eq, Debug)]
@@ -28,16 +28,23 @@ impl Dial {
         }
     }
 
-    pub fn rotate(&mut self, dir: Direction, magnitude: u32) {
-        self.pointer = match dir {
+    pub fn rotate(&mut self, dir: Direction, magnitude: u32) -> u32 {
+        let is_prev_pointer_not_zero = self.pointer != 0;
+        let pointer_before_rem = match dir {
             Direction::Right => (self.pointer + magnitude) as i32,
             Direction::Left => self.pointer as i32 - magnitude as i32,
-        }
-        .rem_euclid(POINTER_LIMIT as i32) as u32
-    }
+        };
+        self.pointer = pointer_before_rem.rem_euclid(POINTER_LIMIT as i32) as u32;
 
-    pub fn is_pointing_zero(&self) -> bool {
-        self.pointer == 0
+        let is_needed_correction =
+            pointer_before_rem == 0 || (pointer_before_rem < 0 && is_prev_pointer_not_zero);
+
+        let naive_division = (pointer_before_rem.abs() / POINTER_LIMIT as i32) as u32;
+        if is_needed_correction {
+            naive_division + 1
+        } else {
+            naive_division
+        }
     }
 }
 
@@ -71,5 +78,58 @@ mod tests {
         let mut dial = Dial::new();
         dial.rotate(Direction::Left, 55);
         assert_eq!(dial.pointer, 95);
+    }
+
+    #[test]
+    fn test_rotate_counter() {
+        let mut dial = Dial::new();
+        let mut counter = 0;
+        counter += dial.rotate(Direction::Left, 68);
+        assert_eq!(dial.pointer, 82);
+        assert_eq!(counter, 1);
+
+        counter += dial.rotate(Direction::Left, 30);
+        assert_eq!(dial.pointer, 52);
+        assert_eq!(counter, 1);
+
+        counter += dial.rotate(Direction::Right, 48);
+        assert_eq!(dial.pointer, 0);
+        assert_eq!(counter, 2);
+
+        counter += dial.rotate(Direction::Left, 5);
+        assert_eq!(dial.pointer, 95);
+        assert_eq!(counter, 2);
+
+        counter += dial.rotate(Direction::Right, 60);
+        assert_eq!(dial.pointer, 55);
+        assert_eq!(counter, 3);
+
+        counter += dial.rotate(Direction::Left, 55);
+        assert_eq!(dial.pointer, 0);
+        assert_eq!(counter, 4);
+
+        counter += dial.rotate(Direction::Left, 1);
+        assert_eq!(dial.pointer, 99);
+        assert_eq!(counter, 4);
+
+        counter += dial.rotate(Direction::Left, 99);
+        assert_eq!(dial.pointer, 0);
+        assert_eq!(counter, 5);
+
+        counter += dial.rotate(Direction::Right, 14);
+        assert_eq!(dial.pointer, 14);
+        assert_eq!(counter, 5);
+
+        counter += dial.rotate(Direction::Left, 82);
+        assert_eq!(dial.pointer, 32);
+        assert_eq!(counter, 6);
+
+        counter += dial.rotate(Direction::Right, 105);
+        assert_eq!(dial.pointer, 37);
+        assert_eq!(counter, 7);
+
+        counter += dial.rotate(Direction::Left, 437);
+        assert_eq!(dial.pointer, 0);
+        assert_eq!(counter, 12);
     }
 }
