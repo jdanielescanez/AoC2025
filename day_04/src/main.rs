@@ -16,26 +16,38 @@ fn main() {
 
     let board = board_string
         .split('\n')
-        .map(|row| row.chars().map(|element| Element::new(element)).collect())
+        .map(|row| row.chars().map(Element::new).collect())
         .collect();
-    let board = Board::new(board);
 
+    let mut board = Board::new(board);
     let n = board.get_number_of_rows();
     let m = board.get_number_of_columns();
-    let positions = (0..n).flat_map(move |row| (0..m).map(move |column| (row, column)));
+    let mut result = 0;
+    loop {
+        let positions = (0..n).flat_map(move |row| (0..m).map(move |column| (row, column)));
 
-    let result = positions
-        .filter(|(row, column)| {
-            board
+        let current_board = board.clone();
+        let positions_to_remove = positions.filter(|(row, column)| {
+            current_board
                 .get(*row as i32, *column as i32)
                 .is_some_and(|element| element == Element::Roll)
-                && board
+                && current_board
                     .get_neighbours(*row as i32, *column as i32)
                     .into_iter()
                     .filter(|&neighbour| neighbour == Element::Roll)
                     .count()
                     < 4
-        })
-        .count();
+        });
+        let current_result = positions_to_remove.clone().count();
+        if current_result == 0 {
+            break;
+        }
+        result += positions_to_remove.clone().count();
+
+        for (row, column) in positions_to_remove {
+            board.set(row as i32, column as i32, Element::Empty);
+        }
+    }
+
     println!("Result: {}", result);
 }

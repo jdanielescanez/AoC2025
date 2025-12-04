@@ -1,3 +1,4 @@
+#[derive(Clone)]
 pub struct Board<T> {
     board: Vec<Vec<T>>,
     number_of_rows: usize,
@@ -18,6 +19,19 @@ where
         }
     }
 
+    pub fn set(&mut self, row: i32, column: i32, x: T) -> Option<T> {
+        if 0 <= row
+            && row < self.number_of_rows as i32
+            && 0 <= column
+            && column < self.number_of_columns as i32
+        {
+            self.board[row as usize][column as usize] = x;
+            Some(x)
+        } else {
+            None
+        }
+    }
+
     pub fn get(&self, row: i32, column: i32) -> Option<T> {
         if 0 <= row
             && row < self.number_of_rows as i32
@@ -31,7 +45,7 @@ where
     }
 
     pub fn get_neighbours(&self, row: i32, column: i32) -> Vec<T> {
-        vec![
+        [
             (row - 1, column - 1),
             (row - 1, column),
             (row - 1, column + 1),
