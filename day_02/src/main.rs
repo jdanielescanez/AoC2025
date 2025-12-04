@@ -1,4 +1,4 @@
-use std::fs;
+use std::{collections::HashSet, fs};
 
 #[derive(Debug)]
 struct IdRange {
@@ -8,6 +8,16 @@ struct IdRange {
 
 fn log10(x: u64) -> f64 {
     (x as f64).log10()
+}
+
+fn get_divisors(n: u64) -> Vec<u64> {
+    let mut divisors = Vec::new();
+    for i in 1..n {
+        if n.is_multiple_of(i) {
+            divisors.push(i);
+        }
+    }
+    divisors
 }
 
 fn split_by_number_of_digits(ranges: Vec<IdRange>) -> Vec<IdRange> {
@@ -60,20 +70,20 @@ fn main() {
     let same_number_of_digits_ranges = split_by_number_of_digits(raw_ranges);
     let invalid_ids = same_number_of_digits_ranges
         .iter()
-        .filter_map(|&IdRange { first, last }| {
-            let number_of_digits = log10(last).ceil() as u32;
-            if number_of_digits % 2 == 1 {
-                None
-            } else {
-                let divisor = 10_u64.pow(number_of_digits / 2) + 1;
-                Some(
+        .flat_map(|&IdRange { first, last }| {
+            let number_of_digits = log10(last).ceil() as u64;
+            let divisors = get_divisors(number_of_digits).into_iter().map(|divisor| {
+                (0..number_of_digits / divisor)
+                    .map(|quotient| 10_u64.pow((quotient * divisor).try_into().unwrap()))
+                    .sum::<u64>()
+            });
+            divisors
+                .flat_map(|divisor| {
                     (first.div_ceil(divisor)..=last / divisor)
-                        .map(|quotient| quotient * divisor)
-                        .collect::<Vec<u64>>(),
-                )
-            }
-        })
-        .flatten();
+                        .map(move |quotient| quotient * divisor)
+                })
+                .collect::<HashSet<u64>>()
+        });
 
     let result = invalid_ids.sum::<u64>();
     println!("Result: {}", result);
