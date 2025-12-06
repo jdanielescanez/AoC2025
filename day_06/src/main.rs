@@ -1,6 +1,7 @@
 use std::fs;
 
-enum Operand {
+#[derive(Debug)]
+enum Operator {
     Add,
     Mul,
 }
@@ -26,33 +27,72 @@ fn main() {
         fs::read_to_string(input_filename).expect("Should have been able to read the file");
 
     let mut lines = cephalopod_string.split('\n').collect::<Vec<&str>>();
-    let operands = lines
-        .pop()
-        .unwrap()
-        .split_ascii_whitespace()
-        .map(|operand| match operand {
-            "+" => Operand::Add,
-            "*" => Operand::Mul,
-            _ => panic!("Invalid operand {operand}"),
-        })
-        .collect::<Vec<Operand>>();
+    let last_line_chars = lines.pop().unwrap().chars();
+    let mut whitespace_counter = 0;
+    let mut whitespaces = vec![];
+    let mut operators = vec![];
+    for char in last_line_chars {
+        if char == ' ' {
+            whitespace_counter += 1;
+        } else {
+            if whitespace_counter != 0 {
+                whitespaces.push(whitespace_counter);
+                whitespace_counter = 0;
+            }
+            if char == '+' {
+                operators.push(Operator::Add);
+            } else if char == '*' {
+                operators.push(Operator::Mul);
+            } else {
+                panic!("Invalid char {char}")
+            }
+        }
+    }
+    whitespaces.push(whitespace_counter + 1);
 
-    let operators_matrix = lines
+    let mut padding = 0;
+    let operands_matrix = whitespaces
+        .iter()
+        .enumerate()
+        .map(|(i, whitespace_counter)| {
+            let submatrix = lines
+                .iter()
+                .map(|line| {
+                    let number = &line[padding + i..padding + whitespace_counter + i];
+                    number
+                        .to_string()
+                        .replace(" ", "0")
+                        .chars()
+                        .collect::<Vec<char>>()
+                })
+                .collect::<Vec<Vec<char>>>();
+            padding += whitespace_counter;
+            submatrix
+        })
+        .collect::<Vec<Vec<Vec<char>>>>();
+
+    let operators_matrix = operands_matrix
         .into_iter()
-        .map(|line| {
-            line.split_ascii_whitespace()
-                .map(|num| num.parse::<u64>().unwrap())
+        .map(|submatrix| {
+            transpose(submatrix)
+                .into_iter()
+                .map(|row| {
+                    row.iter()
+                        .collect::<String>()
+                        .trim_end_matches('0')
+                        .parse::<u64>()
+                        .unwrap()
+                })
                 .collect::<Vec<u64>>()
         })
         .collect::<Vec<Vec<u64>>>();
-    let operators_matrix = transpose(operators_matrix);
 
-    let result = operands
+    let result = operators
         .into_iter()
         .zip(operators_matrix)
-        .map(|(operand, operators)| match operand {
-            Operand::Add => operators.iter().sum::<u64>(),
-            Operand::Mul => operators.iter().product(),
+        .map(|(operator, operands)| match operator {
+            Operator::Add => operands.into_iter().sum::<u64>(),
+            Operator::Mul => operands.into_iter().product(),
         })
         .sum::<u64>();
 
