@@ -15,6 +15,6 @@ fn main() {
         fs::read_to_string(input_filename).expect("Should have been able to read the file");
 
     let manifold = Manifold::new(&board_string);
-    let result = manifold.count_activated_splitters();
+    let result = manifold.count_rays();
     println!("Result: {}", result);
 }

@@ -3,7 +3,6 @@ pub enum Element {
     Start,
     Empty,
     Splitter,
-    Beam,
 }
 
 impl Element {

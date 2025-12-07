@@ -1,4 +1,4 @@
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Board<T> {
     board: Vec<Vec<T>>,
     number_of_rows: usize,
@@ -42,6 +42,14 @@ where
         } else {
             None
         }
+    }
+
+    pub fn get_number_of_rows(&self) -> usize {
+        self.number_of_rows
+    }
+
+    pub fn get_number_of_columns(&self) -> usize {
+        self.number_of_columns
     }
 
     pub fn find(&self, element: T) -> Option<(usize, usize)> {
