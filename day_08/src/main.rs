@@ -12,13 +12,17 @@ fn main() {
     let network_string =
         fs::read_to_string(input_filename).expect("Should have been able to read the file");
 
-    let mut efficient_circuits = Network::new(&network_string).get_efficient_circuits(1000);
+    let network = Network::new(&network_string);
+    let mut efficient_circuits = network.get_efficient_circuits(1000);
     efficient_circuits.sort_by_key(|circuit| circuit.len());
-    let result = efficient_circuits
+    let result_part_1 = efficient_circuits
         .into_iter()
         .rev()
         .map(|circuit| circuit.len())
         .take(3)
         .product::<usize>();
-    println!("Result: {}", result);
+    let result_part_2 = network.get_x_product_of_last_pair();
+
+    println!("Result part 1: {}", result_part_1);
+    println!("Result part 2: {}", result_part_2);
 }

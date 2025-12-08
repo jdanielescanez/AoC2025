@@ -86,4 +86,57 @@ impl Network {
             },
         )
     }
+
+    pub fn get_x_product_of_last_pair(&self) -> usize {
+        let posible_conections = (0..self.juction_boxes.len()).flat_map(|i| {
+            (0..self.juction_boxes.len())
+                .filter_map(move |j| if i < j { Some((i, j)) } else { None })
+        });
+        let mut distances = posible_conections.fold(Vec::new(), |mut acc, (i, j)| {
+            acc.push((
+                self.juction_boxes[i].distance(self.juction_boxes[j]),
+                (i, j),
+            ));
+            acc
+        });
+        distances.sort_by(|(distance1, _), (distance2, _)| distance1.total_cmp(distance2));
+
+        let mut circuits: Vec<HashSet<usize>> = Vec::new();
+        let mut distances = distances.into_iter();
+        loop {
+            let (_, (i, j)) = distances.next().unwrap();
+            let mut subcircuit = HashSet::new();
+            subcircuit.insert(j);
+            subcircuit.insert(i);
+
+            let position_circuit_i = circuits.iter().position(|circuit| circuit.contains(&i));
+            let position_circuit_j = circuits.iter().position(|circuit| circuit.contains(&j));
+
+            match (position_circuit_i, position_circuit_j) {
+                (Some(position_circuit_i), Some(position_circuit_j)) => {
+                    if position_circuit_i == position_circuit_j {
+                        circuits[position_circuit_i].extend(&subcircuit);
+                    } else {
+                        let lower_position = min(position_circuit_i, position_circuit_j);
+                        let upper_position = max(position_circuit_i, position_circuit_j);
+                        let upper_subcircuit = circuits[upper_position].clone();
+                        circuits.remove(upper_position);
+                        circuits[lower_position].extend(&upper_subcircuit);
+                    }
+                }
+                (Some(only_one_position), None) | (None, Some(only_one_position)) => {
+                    circuits[only_one_position].extend(&subcircuit);
+                }
+                (None, None) => {
+                    circuits.push(subcircuit.clone());
+                }
+            }
+            if circuits[0].len() == self.juction_boxes.len() {
+                return subcircuit
+                    .iter()
+                    .map(|&id| self.juction_boxes[id].x)
+                    .product();
+            }
+        }
+    }
 }
