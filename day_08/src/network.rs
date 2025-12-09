@@ -64,16 +64,17 @@ impl Network {
                 let position_circuit_i = circuits.iter().position(|circuit| circuit.contains(&i));
                 let position_circuit_j = circuits.iter().position(|circuit| circuit.contains(&j));
                 match (position_circuit_i, position_circuit_j) {
+                    (Some(position_circuit_i), Some(position_circuit_j))
+                        if position_circuit_i == position_circuit_j =>
+                    {
+                        circuits[position_circuit_i].extend(&subcircuit);
+                    }
                     (Some(position_circuit_i), Some(position_circuit_j)) => {
-                        if position_circuit_i == position_circuit_j {
-                            circuits[position_circuit_i].extend(&subcircuit);
-                        } else {
-                            let lower_position = min(position_circuit_i, position_circuit_j);
-                            let upper_position = max(position_circuit_i, position_circuit_j);
-                            let upper_subcircuit = circuits[upper_position].clone();
-                            circuits.remove(upper_position);
-                            circuits[lower_position].extend(&upper_subcircuit);
-                        }
+                        let lower_position = min(position_circuit_i, position_circuit_j);
+                        let upper_position = max(position_circuit_i, position_circuit_j);
+                        let upper_subcircuit = circuits[upper_position].clone();
+                        circuits.remove(upper_position);
+                        circuits[lower_position].extend(&upper_subcircuit);
                     }
                     (Some(only_one_position), None) | (None, Some(only_one_position)) => {
                         circuits[only_one_position].extend(&subcircuit);
